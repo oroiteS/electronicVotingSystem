@@ -30,15 +30,36 @@
             <span>投票状态</span>
           </template>
           <div v-if="votingStatusInfo">
-            <p>投票是否已开始: <el-tag :type="votingStatusInfo.isStarted ? 'success' : 'info'">{{ votingStatusInfo.isStarted ?
-                '是' :
-                '否' }}</el-tag></p>
-            <p>投票是否已结束: <el-tag :type="votingStatusInfo.isEnded ? 'success' : 'info'">{{ votingStatusInfo.isEnded ? '是'
-                : '否'
-                }}</el-tag></p>
-            <p v-if="votingStatusInfo.votingDeadlineTimestamp">截止时间: {{
-              formatDateTime(votingStatusInfo.votingDeadlineTimestamp)
-              }}</p>
+            <p>当前投票阶段: 
+              <el-tag :type="votingStatusInfo.phase === 'Active' ? 'success' : (votingStatusInfo.phase === 'Pending' ? 'info' : (votingStatusInfo.phase === 'Concluded' ? 'warning' : 'danger'))">
+                {{ votingStatusInfo.phase || '未知' }}
+              </el-tag>
+            </p>
+            <p>投票是否已开始: <el-tag :type="votingStatusInfo.isStarted ? 'success' : 'info'">{{ votingStatusInfo.isStarted ? '是' : '否' }}</el-tag></p>
+            <p>投票是否已结束: <el-tag :type="votingStatusInfo.isEnded ? 'success' : 'info'">{{ votingStatusInfo.isEnded ? '是' : '否' }}</el-tag></p>
+            <p>预设开始时间: {{ formatDateTime(votingStatusInfo.startTime) }}</p>
+            <p>预设结束时间: {{ formatDateTime(votingStatusInfo.endTime) }}</p>
+            
+            <!-- 新增：显示候选人得票信息 -->
+            <div v-if="votingStatusInfo.isStarted" style="margin-top: 15px;">
+              <el-divider content-position="left">候选人得票情况</el-divider>
+              <div v-if="candidatesWithVotes.length > 0">
+                <el-descriptions :column="1" border size="small">
+                  <el-descriptions-item 
+                    v-for="candidate in candidatesWithVotes" 
+                    :key="candidate.id_on_chain" 
+                    :label="candidate.name">
+                    <el-tag type="info" effect="plain" round>
+                      {{ candidate.vote_count_from_chain }} 票
+                    </el-tag>
+                  </el-descriptions-item>
+                </el-descriptions>
+              </div>
+              <p v-else>
+                投票已开始/结束，当前暂无候选人得票数据或正在加载...
+              </p>
+            </div>
+
           </div>
           <el-empty v-else description="正在加载投票状态..."></el-empty>
         </el-card>
@@ -112,19 +133,19 @@ import AdminDashboard from '@/components/adminDashboard.vue';
 
 const router = useRouter();
 const currentUser = ref(null);
-const votingStatusInfo = ref(null); // { voting_has_started: bool, voting_has_ended: bool, start_time: string, end_time: string }
+const votingStatusInfo = ref(null);
 const showApplyDialog = ref(false);
+const candidatesWithVotes = ref([]); // 新增: 存储候选人及其票数
 
 // --- Computed Properties ---
 const isRegisteredVoter = computed(() => {
   return currentUser.value &&
-    currentUser.value.is_voter && // 在 voters 表中有记录
-    currentUser.value.voter_is_registered_on_chain; // 并且已在链上注册
+    currentUser.value.is_voter &&
+    currentUser.value.voter_is_registered_on_chain;
 });
 
 const canApplyForVoter = computed(() => {
   if (!currentUser.value || currentUser.value.role === 'admin') return false;
-  // 如果是普通用户，且没有申请，或者最近的申请是 rejected，则可以申请
   return !currentUser.value.voter_application_status || currentUser.value.voter_application_status === 'rejected';
 });
 
@@ -146,7 +167,6 @@ const fetchCurrentUser = async () => {
       console.log('Current user data:', currentUser.value);
     } else {
       ElMessage.error(response.data.message || '获取用户信息失败');
-      // 可能需要重定向到登录页，如果token失效等
       // router.push('/login');
     }
   } catch (error) {
@@ -158,37 +178,62 @@ const fetchCurrentUser = async () => {
   }
 };
 
-const fetchVotingStatus = async () => {
-  // 假设你有一个 api.getVotingStatus() 函数
-  // 这个函数应该调用后端的 `/api/vote/status` 或类似接口
+const fetchCandidatesWithVotes = async () => {
+  const loadingInstance = ElLoading.service({ text: '加载候选人得票信息...' });
   try {
-    const response = await api.getVotingStatus(); // 你需要实现这个 API 调用
+    const response = await api.getAllCandidates(); // API 调用获取候选人列表及票数
+    if (response.data.success && response.data.candidates) {
+      candidatesWithVotes.value = response.data.candidates;
+      console.log('Candidates with votes:', candidatesWithVotes.value);
+    } else {
+      ElMessage.warning(response.data.message || '获取候选人得票信息失败。');
+      candidatesWithVotes.value = [];
+    }
+  } catch (error) {
+    console.error('Error fetching candidates with votes:', error);
+    ElMessage.error('获取候选人得票信息时发生错误。');
+    candidatesWithVotes.value = [];
+  } finally {
+    loadingInstance.close();
+  }
+};
+
+const fetchVotingStatus = async () => {
+  const loadingInstance = ElLoading.service({ text: '加载投票状态...' });
+  try {
+    const response = await api.getVotingStatus();
     if (response.data.success) {
       votingStatusInfo.value = response.data;
-      console.log('Voting status:', votingStatusInfo.value.success);
-      console.log('votingDeadlineTimestamp:', votingStatusInfo.value.votingDeadlineTimestamp);
+      console.log('Voting status:', votingStatusInfo.value);
+
+      if (votingStatusInfo.value.isStarted) { // 如果投票已开始或已结束
+        await fetchCandidatesWithVotes();
+      } else {
+        candidatesWithVotes.value = []; // 投票未开始则清空
+      }
     } else {
       ElMessage.warning(response.data.message || '获取投票状态失败，将使用默认值。');
-      // 可以设置一个默认状态，或者让用户知道信息不完整
-      votingStatusInfo.value = { voting_has_started: false, voting_has_ended: false, start_time: null, end_time: null };
+      votingStatusInfo.value = { phase: "Error", phase_code: -1, isStarted: false, isEnded: true, startTime: 0, endTime: 0 };
+      candidatesWithVotes.value = []; // 获取状态失败也清空
     }
   } catch (error) {
     console.error('Error fetching voting status:', error);
     ElMessage.error('获取投票状态时发生错误。');
-    votingStatusInfo.value = { voting_has_started: false, voting_has_ended: false, start_time: null, end_time: null };
+    votingStatusInfo.value = { phase: "Error", phase_code: -1, isStarted: false, isEnded: true, startTime: 0, endTime: 0 };
+    candidatesWithVotes.value = []; // 发生错误也清空
+  } finally {
+    loadingInstance.close();
   }
 };
 
 const submitVoterApplication = async () => {
   const loadingInstance = ElLoading.service({ text: '正在提交申请...' });
   try {
-    // 假设 api.applyToBeVoter() 不需要请求体，或一个空对象
-    // 根据你对 VoterApplication 模型的修改，后端接口可能不再需要具体申请内容
-    const response = await api.applyForVoter({}); // 确保 api.js 中有此方法
+    const response = await api.applyForVoter({});
     if (response.data.success) {
       ElMessage.success('选民申请已成功提交！');
       showApplyDialog.value = false;
-      await fetchCurrentUser(); // 刷新用户信息以更新状态
+      await fetchCurrentUser();
     } else {
       ElMessage.error(response.data.message || '提交选民申请失败。');
     }
@@ -200,18 +245,20 @@ const submitVoterApplication = async () => {
   }
 };
 
-const formatDateTime = (dateTimeString) => {
-  if (!dateTimeString) return 'N/A';
+const formatDateTime = (timestampInSeconds) => {
+  if (!timestampInSeconds || timestampInSeconds === 0) return '未设置';
   try {
-    return new Date(dateTimeString * 1000).toLocaleString();
+    // 时间戳是秒，Date构造函数需要毫秒
+    return new Date(timestampInSeconds * 1000).toLocaleString();
   } catch (e) {
-    return dateTimeString; // 如果解析失败，返回原始字符串
+    console.error('Error formatting date:', e);
+    return '日期格式无效';
   }
 };
 
 // --- Navigation Methods ---
 const goToVotePage = () => {
-  router.push('/vote'); // 假设投票页面路由为 /vote
+  router.push('/vote');
 };
 
 // --- Lifecycle Hooks ---

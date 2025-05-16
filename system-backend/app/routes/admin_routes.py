@@ -12,7 +12,7 @@ from werkzeug.utils import secure_filename
 from .. import db
 from ..models.models import CandidateDetails, Voter, User, VoterApplication
 from ..utils.web3_utils import get_contract, get_w3
-from app import scheduler  # 确保导入 scheduler 实例
+from app import scheduler, create_app  # 确保导入 scheduler 实例和 create_app
 
 admin_bp = Blueprint('admin_routes', __name__, url_prefix='/api/admin')
 
@@ -646,10 +646,14 @@ def get_contract_voting_status(current_admin_user):
 
 
 def job_start_voting_on_contract(voting_id_or_job_id):
-    with current_app.app_context():
+    # 调用 create_app 时，不初始化调度器
+    flask_app = create_app(init_scheduler=False) 
+    
+    with flask_app.app_context():
         try:
-            current_app.logger.info(
+            flask_app.logger.info(
                 f"APScheduler: Attempting to auto-start voting via job (ID: {voting_id_or_job_id}).")
+            
             contract = get_contract()
             w3 = get_w3()
             tx_sender_account = w3.eth.default_account
@@ -661,20 +665,21 @@ def job_start_voting_on_contract(voting_id_or_job_id):
             current_block_time = status_data[3]
 
             if current_phase_from_contract == 0:  # VotingPhase.Pending
-                current_app.logger.info(
+                flask_app.logger.info(
                     f"Contract phase is Pending. Attempting to call startVoting() for job {voting_id_or_job_id}.")
-                tx_hash = contract.functions.startVoting().transact({'from': tx_sender_account})
-                current_app.logger.info(
+                
+                tx_hash = contract.functions.startVoting().transact({'from': tx_sender_account, 'gas': 300000})
+                flask_app.logger.info(
                     f"APScheduler: Auto-start voting transaction sent for job {voting_id_or_job_id}. "
                     f"TX Hash: {tx_hash.hex()}")
             else:
-                current_app.logger.warning(
+                flask_app.logger.warning(
                     f"APScheduler: Auto-start voting job {voting_id_or_job_id} skipped. "
                     f"Contract phase is not Pending (Phase: {current_phase_from_contract}). "
                     f"Current block time: {current_block_time}, Contract start: {contract_start_time}, "
                     f"Contract end: {contract_end_time}")
 
         except Exception as e:
-            current_app.logger.error(
+            flask_app.logger.error(
                 f"APScheduler: Error in job_start_voting_on_contract (Job ID: {voting_id_or_job_id}): {str(e)}",
                 exc_info=True)

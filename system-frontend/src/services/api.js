@@ -1,7 +1,7 @@
 import axios from 'axios';
-import router from '@/router'; // 导入 router 以便在拦截器中使用
+import router from '@/router';
 
-// 从环境变量获取 API 基础 URL，或者硬编码 (不推荐用于生产)
+// 从环境变量获取 API 基础 URL
 const API_BASE_URL = process.env.VUE_APP_API_BASE_URL || 'http://127.0.0.1:5000/api';
 
 const apiClient = axios.create({
@@ -37,11 +37,6 @@ apiClient.interceptors.response.use(
             localStorage.removeItem('accessToken');
             localStorage.removeItem('user');
             
-            // 触发 Pinia store 中的 logout action（如果 store 已初始化且可访问）
-            // 注意：直接在这里导入和使用 store 可能导致循环依赖或 store 未初始化的问题
-            // 更稳健的做法是通过事件总线，或者让调用方处理401后的登出逻辑
-            // 此处为了简单，直接导航，但 Pinia store 中的 logout 应该包含清理逻辑
-            
             // 检查当前是否已在登录页，避免无限重定向
             if (router.currentRoute.value.name !== 'Login') {
                  router.push({ name: 'Login' }).catch(err => {
@@ -76,7 +71,6 @@ export default {
         return apiClient.post('/user/apply_voter', applicationData);
     },
 
-    // --- Admin Service ---
     // 对于管理员接口，token 会由请求拦截器自动添加
     addCandidate(candidateData) { // { name, description, slogan }
         return apiClient.post('/admin/add_candidate', candidateData);
@@ -88,7 +82,6 @@ export default {
         return apiClient.put(`/admin/voter_applications/${applicationId}/review`, reviewData);
     },
 
-    // --- New Admin Voting Activity Management ---
     setVotingPeriod(periodData) { // periodData: { start_time_timestamp: number, end_time_timestamp: number }
         return apiClient.post('/admin/voting/period', periodData);
     },
@@ -101,12 +94,11 @@ export default {
     extendVotingDeadline(deadlineData) { // deadlineData: { new_end_time_timestamp: number }
         return apiClient.put('/admin/voting/extend', deadlineData);
     },
-    getContractVotingStatus() { // For admin panel to get detailed status
+    // 获取合约投票状态
+    getContractVotingStatus() { 
         return apiClient.get('/admin/voting/contract_status');
     },
 
-    // --- Vote Service (Public and Protected) ---
-    // 公开接口
     getAllCandidates() {
         return apiClient.get('/candidates');
     },

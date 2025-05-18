@@ -1,7 +1,7 @@
 // src/store/auth.js
 import { defineStore } from 'pinia';
-import apiService from '@/services/api'; // 假设 api.js 在 services 目录下
-import router from '@/router'; // 导入 router 实例用于导航
+import apiService from '@/services/api';
+import router from '@/router';
 
 export const useAuthStore = defineStore('auth', {
     state: () => ({
@@ -53,8 +53,6 @@ export const useAuthStore = defineStore('auth', {
                 const response = await apiService.register(userData);
                 if (response.data.success) {
                     this.status = 'success';
-                    // 注册成功后，可以提示用户登录或自动登录
-                    // router.push('/login');
                     return true;
                 } else {
                     throw new Error(response.data.message || 'Registration failed');
@@ -75,7 +73,6 @@ export const useAuthStore = defineStore('auth', {
             this.status = '';
             router.push('/login');
         },
-        // 可选: Action 来获取当前用户信息 (例如在应用加载时)
         async fetchCurrentUserProfile() {
             if (!this.accessToken) return; // 如果没有 token，不尝试获取
             this.status = 'loading';

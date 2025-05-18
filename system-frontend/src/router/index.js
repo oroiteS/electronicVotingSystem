@@ -61,7 +61,7 @@ const routes = [
     // 其他路由...
     {
         path: '/:catchAll(.*)*', // 捕获所有未匹配的路由
-        redirect: '/login' // 或者重定向到一个 404 页面
+        redirect: '/login'
     }
 ];
 
@@ -72,30 +72,26 @@ const router = createRouter({
 
 // 全局前置守卫
 router.beforeEach((to, from, next) => {
-    const authStore = useAuthStore(); // 在守卫外部或内部实例化 store
+    const authStore = useAuthStore();
 
     const isAuthenticated = authStore.isAuthenticated;
     const isAdmin = authStore.isAdmin;
 
     if (to.meta.requiresAuth) {
         if (!isAuthenticated) {
-            // 如果路由需要认证但用户未认证，重定向到登录页
-            authStore.logout(); // 清理状态并确保重定向
-            // next({ name: 'Login' }); // 使用 name 重定向更安全
-            return; // 在 logout 中已经处理了跳转
+            authStore.logout();
+            return;
         } else if (to.meta.requiresAdmin && !isAdmin) {
-            // 如果路由需要管理员权限但用户不是管理员
             console.warn("Access Denied: Admin rights required for", to.fullPath);
-            next({ name: 'Home' }); // 或者重定向到用户首页或一个“无权限”页面
+            next({ name: 'Home' });
             return;
         }
     } else if (to.meta.requiresGuest && isAuthenticated) {
-        // 如果路由是访客路由 (如登录/注册) 但用户已认证
-        next({ name: 'Home' }); // 普通用户重定向到首页
+        next({ name: 'Home' });
         return;
     }
 
-    next(); // 确保总是调用 next()
+    next();
 });
 
 export default router;

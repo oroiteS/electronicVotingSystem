@@ -3,10 +3,10 @@ import json
 import web3.exceptions
 from flask import Blueprint, jsonify, current_app, request
 from flask_jwt_extended import jwt_required, get_jwt_identity
-from datetime import datetime, UTC  # 用于时间戳
+from datetime import datetime, UTC  
 
-from .. import db  # 导入数据库实例
-from ..models.models import CandidateDetails, Voter, Votes, User  # 导入模型
+from .. import db  
+from ..models.models import CandidateDetails, Voter, Votes, User  
 from ..utils.web3_utils import get_contract, get_w3
 
 vote_bp = Blueprint('vote_bp', __name__, url_prefix='/api')
@@ -40,7 +40,7 @@ def get_all_candidates():
                 "image_url": candidate_detail_db.image_url if candidate_detail_db else None,
                 "slogan": candidate_detail_db.slogan if candidate_detail_db else None,
                 "id": candidate_detail_db.id if candidate_detail_db else None,  # 数据库中的 ID
-                # 保留 to_dict() 中的其他字段，如果前端需要它们
+                # 保留 to_dict() 中的其他字段，便于前端使用
                 "created_at": candidate_detail_db.created_at.isoformat()
                 if candidate_detail_db and candidate_detail_db.created_at else None,
                 "updated_at": candidate_detail_db.updated_at.isoformat()
@@ -64,11 +64,11 @@ def get_all_candidates():
 
 @vote_bp.route('/voting_status', methods=['GET'])
 def get_voting_status_route():
-    """获取公共投票状态信息 (与新版合约对齐)"""
+    """获取公共投票状态信息"""
     try:
         contract = get_contract()
 
-        # 调用新合约的 getVotingStatus()
+        # 调用合约的 getVotingStatus()
         # 返回: (VotingPhase phase, uint startTime, uint endTime, uint currentTimeFromContract)
         status_data = contract.functions.getVotingStatus().call()
 
@@ -77,7 +77,6 @@ def get_voting_status_route():
         end_time_ts = status_data[2]
         # current_block_ts_from_contract = status_data[3] # 合约返回的当前区块时间戳
 
-        # 为了与旧前端或简单逻辑兼容，我们可以派生 isStarted 和 isEnded
         # VotingPhase: 0=Pending, 1=Active, 2=Concluded
         is_started = False
         is_ended = False
@@ -85,20 +84,14 @@ def get_voting_status_route():
 
         if phase_code == 0:  # Pending
             phase_string = "Pending"
-            # is_started is false
-            # is_ended is false (unless an end_time was set and passed, but phase should be Concluded then)
         elif phase_code == 1:  # Active
             phase_string = "Active"
             is_started = True
-            is_ended = False  # If phase is Active, it cannot be ended yet by definition of the phase
+            is_ended = False
         elif phase_code == 2:  # Concluded
             phase_string = "Concluded"
-            is_started = True  # It must have started to be concluded
+            is_started = True
             is_ended = True
-
-        # 如果需要，也可以使用服务器的当前时间进行一些辅助判断，
-        # 但主要还是依赖合约的 phase
-        # current_server_timestamp = int(datetime.now(timezone.utc).timestamp())
 
         return jsonify({
             "success": True,
@@ -108,8 +101,6 @@ def get_voting_status_route():
             "isEnded": is_ended,  # 派生出的状态
             "startTime": start_time_ts,  # 合约中设置的开始时间戳 (秒)
             "endTime": end_time_ts,  # 合约中设置的结束时间戳 (秒)
-            # "votingDeadlineTimestamp": end_time_ts, # 为了兼容旧前端可能使用的字段名
-            # "currentTimeOnContract": current_block_ts_from_contract # 可以选择是否暴露这个
         }), 200
 
     except Exception as e:
@@ -121,7 +112,7 @@ def get_voting_status_route():
             "phase": "Error",
             "phase_code": -1,
             "isStarted": False,
-            "isEnded": True,  # 发生错误时，通常假设投票不可用
+            "isEnded": True,
             "startTime": 0,
             "endTime": 0
         }), 500
@@ -202,11 +193,8 @@ def cast_vote():
             current_app.logger.error(
                 f"Blockchain transaction failed for voting. Voter ETH: {voter_eth_address}, "
                 f"Candidate Index: {candidate_index_int}. Receipt: {tx_receipt}")
-            # 尝试从合约 revert 原因中获取更具体的信息 (如果 web3.py 版本支持且合约返回了原因)
-            # 注意：这部分的错误提取可能需要根据实际合约和 web3 版本进行调整
+            # 尝试从合约 revert 原因中获取更具体的信息
             error_message = "Failed to cast vote on blockchain. Transaction reverted."
-            # if 'message' in tx_receipt: # 这通常不直接在 receipt 中，而是通过捕获异常
-            #     error_message += f" Reason: {tx_receipt['message']}"
             return jsonify({"success": False, "message": error_message,
                             "txHash": tx_hash.hex()}), 500
 
@@ -215,7 +203,6 @@ def cast_vote():
             f"TX Hash: {tx_hash.hex()}")
 
         # 4. 在数据库中记录投票
-        # --- CORRECTED PART ---
         # 获取被投票候选人的姓名
         try:
             # 合约的 getCandidate 函数需要一个 uint _candidateId 参数
@@ -225,8 +212,6 @@ def cast_vote():
             current_app.logger.error(
                 f"Failed to get candidate name from contract after voting for index {candidate_index_int}. "
                 f"User: {user.userid}. Error: {str(e_get_candidate)}")
-            # 即使无法获取候选人名字，我们可能仍然想记录投票，但标记候选人信息缺失
-            # 或者，如果候选人姓名对你至关重要，则返回错误
             return jsonify(
                 {"success": False,
                  "message": f"Vote cast on chain, but failed to retrieve candidate details post-transaction: "
@@ -234,17 +219,12 @@ def cast_vote():
 
         # 使用获取到的 candidate_name_on_chain
         voted_candidate_name = candidate_name_on_chain
-        # --- END OF CORRECTION ---
 
         candidate_detail_db = CandidateDetails.query.filter_by(name=voted_candidate_name).first()
         if not candidate_detail_db:
-            # ... (处理候选人不在数据库的逻辑保持不变) ...
             current_app.logger.error(
                 f"Voted candidate '{voted_candidate_name}' (index {candidate_index_int}) not found in DB details "
                 f"for user {user.userid}.")
-            # 这是一个潜在的数据不一致问题：候选人在链上存在但在数据库 CandidateDetails 中没有对应记录
-            # 你可能需要决定如何处理这种情况。例如，创建一个临时的 CandidateDetails 记录，或返回错误。
-            # 为了保持一致性，如果候选人必须在数据库中存在，这里应该返回错误。
             return jsonify({"success": False,
                             "message": f"Data inconsistency: Candidate '{voted_candidate_name}' "
                                        f"(voted on chain) not found in local database details."}), 500
@@ -286,7 +266,6 @@ def cast_vote():
             error_message_to_user = "You have already voted."
         elif "Voting is not active" in revert_reason:
             error_message_to_user = "Voting is not currently active."
-        # 可以添加更多特定 revert 原因的处理
         else:
             error_message_to_user = f"Blockchain transaction failed: {revert_reason}"
 
@@ -294,7 +273,7 @@ def cast_vote():
             f"ContractLogicError while casting vote for user {user_display_name}. Reason: {revert_reason}. "
             f"Input candidate_index: {data.get('candidate_index_on_chain', 'N/A')}")
         return jsonify({"success": False, "message": error_message_to_user,
-                        "details": revert_reason}), 400  # 400 Bad Request or 409 Conflict for already voted
+                        "details": revert_reason}), 400
 
     except Exception as e:  # 通用异常捕获
         db.session.rollback()
@@ -353,7 +332,6 @@ def revoke_vote():
         tx_receipt = w3.eth.wait_for_transaction_receipt(tx_hash, timeout=120)
 
         if tx_receipt.status != 1:
-            # ... (错误处理保持不变) ...
             current_app.logger.error(
                 f"Blockchain transaction failed for revoking vote. Voter ETH: {voter_eth_address}. "
                 f"Receipt: {tx_receipt}")

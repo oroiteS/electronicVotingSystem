@@ -10,7 +10,7 @@ CREATE TABLE IF NOT EXISTS users (
     userid VARCHAR(100) NOT NULL UNIQUE,             -- 用户登录名，唯一
     password_hash VARCHAR(255) NOT NULL,             -- 哈希后的密码
     role VARCHAR(20) NOT NULL DEFAULT 'user',        -- 角色 ('admin', 'user')
-    ethereum_address VARCHAR(42) UNIQUE NULL,        -- 用户的以太坊钱包地址，可以唯一，用户注册时选择
+    ethereum_address VARCHAR(42) UNIQUE NULL,        -- 用户的以太坊钱包地址，唯一，用户注册时选择
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
@@ -64,7 +64,7 @@ CREATE TABLE IF NOT EXISTS votes (
     -- 链上投票的交易信息
     transaction_hash VARCHAR(66) UNIQUE NOT NULL, -- 投票交易在区块链上的哈希，必须唯一
     block_number BIGINT,                       -- 投票交易被打包的区块号
-    voted_at_on_chain TIMESTAMP NULL,          -- 投票在链上确认的时间 (可以从区块时间戳获取，或后端记录)
+    voted_at_on_chain TIMESTAMP NULL,          -- 投票在链上确认的时间
 
     -- 审计信息
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, -- 记录创建时间 (通常是后端接收到投票请求并准备上链的时间)
@@ -73,6 +73,6 @@ CREATE TABLE IF NOT EXISTS votes (
     FOREIGN KEY (voter_id) REFERENCES voters(id) ON DELETE RESTRICT, 
     FOREIGN KEY (candidate_id) REFERENCES candidate_details(id) ON DELETE RESTRICT,
 
-    -- 确保一个选民只能投一次票 (在当前单一选举的假设下)
+    -- 确保一个选民只能投一次票
     UNIQUE KEY uq_voter_election (voter_id) 
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

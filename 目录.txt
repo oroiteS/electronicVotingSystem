@@ -1,10 +1,4 @@
 root_directory{
-    .idea{
-        ...
-    },
-    files{
-        ...
-    },
     smart_contract{
         ...,
         contract{
@@ -50,12 +44,7 @@ root_directory{
     system-frontend{
         ...,
         src{
-            assets{
-                candidates{
-                    ...
-                },
-                ...
-            },
+            ...,
             components{
                 adminDashboard.vue
             },

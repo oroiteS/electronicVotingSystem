@@ -230,7 +230,7 @@ const goToLogin = () => {
 }
 
 .panel-left {
-  background-color: #6a5acd; /* 左侧背景色，可以调整 */
+  background-color: #6a5acd;
   padding: 40px;
   display: flex;
   flex-direction: column;
@@ -245,7 +245,7 @@ const goToLogin = () => {
   text-align: center;
 }
 
-.decorative-graphics { /* 简单的CSS图形替代插画 */
+.decorative-graphics {
   width: 180px;
   height: 180px;
   background-color: rgba(255, 255, 255, 0.1);
@@ -313,24 +313,23 @@ const goToLogin = () => {
   font-size: 15px; /* 略微增大副标题字体 */
 }
 
-/* --- 字体增大关键修改 --- */
 .register-form-container .el-form-item__label {
-  font-size: 15px; /* 增大标签字体 */
+  font-size: 15px;
   color: #606266;
   margin-bottom: 2px !important;
 }
 
 .register-form-container .el-input--large .el-input__inner,
-.register-form-container .el-select--large .el-select-v2__wrapper .el-select-v2__placeholder, /* Element Plus Select V2 placeholder */
-.register-form-container .el-select--large .el-input__inner /* Element Plus Select V2 input part */ {
-  font-size: 16px; /* 增大输入框和选择框内文字体 */
+.register-form-container .el-select--large .el-select-v2__wrapper .el-select-v2__placeholder,
+.register-form-container .el-select--large .el-input__inner {
+  font-size: 16px;
 }
-.register-form-container .el-select-dropdown__item { /* 下拉选项的字体 */
+.register-form-container .el-select-dropdown__item {
     font-size: 15px;
 }
 .register-form-container .el-input--large .el-input__prefix .el-input__icon,
 .register-form-container .el-input--large .el-input__suffix .el-input__icon,
-.register-form-container .el-select--large .el-input__prefix .el-input__icon { /* 选择框前缀图标 */
+.register-form-container .el-select--large .el-input__prefix .el-input__icon {
     font-size: 16px;
 }
 

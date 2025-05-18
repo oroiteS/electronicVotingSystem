@@ -50,15 +50,14 @@ class User(db.Model):
                 data['voter_is_registered_on_chain'] = self.voter_record.is_registered_on_chain
 
                 # 检查数据库中该选民是否有投票记录
-                # 假设: Votes 模型有一个 voter_id 外键指向 Voter.id
                 if include_has_voted_status:  # 仅当请求时才检查
-                    # 需要确保 Votes 和 Voter 模型已经正确导入或定义
                     vote_cast_by_user = Votes.query.filter_by(voter_id=self.voter_record.id).first()
                     if vote_cast_by_user:
                         has_voted_in_db = True
 
             if include_has_voted_status:
-                data['has_voted'] = has_voted_in_db  # 添加用户是否已投票的状态 (基于数据库)
+                # 添加用户是否已投票的状态 (基于数据库)
+                data['has_voted'] = has_voted_in_db
 
             # voter_application_status 的逻辑保持不变
             latest_pending_or_approved_app = VoterApplication.query.filter_by(user_id=self.id) \

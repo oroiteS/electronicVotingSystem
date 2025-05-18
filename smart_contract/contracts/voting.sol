@@ -10,7 +10,8 @@ contract Voting {
     struct Voter {
         bool isRegistered;
         bool hasVoted;
-        uint votedForCandidateId; // Storing candidate ID/index
+        // Storing candidate ID/index
+        uint votedForCandidateId; 
     }
 
     enum VotingPhase {
@@ -93,8 +94,9 @@ contract Voting {
         // 确保当前区块时间在预设的结束时间之前
         require(block.timestamp < votingEndTime, "Cannot start voting if current time is already past the end time.");
         require(candidates.length > 1, "At least two candidates are required to start voting.");
-
-        votingStartTime = block.timestamp; // 将投票开始时间设置为当前区块时间
+        
+        // 将投票开始时间设置为当前区块时间
+        votingStartTime = block.timestamp; 
         currentPhase = VotingPhase.Active;
         // 事件将发出实际的开始时间
         emit VotingStarted(votingStartTime); 
@@ -136,22 +138,17 @@ contract Voting {
         emit Voted(msg.sender, _candidateId);
     }
 
-    function revokeVote() public canVote { // User can only revoke if they can vote (i.e., voting active)
+    function revokeVote() public canVote { 
+        // User can only revoke if they can vote (i.e., voting active)
         require(voters[msg.sender].hasVoted, "No vote to revoke.");
 
         uint candidateId = voters[msg.sender].votedForCandidateId;
-        // No need to check if candidateId is valid here as it was valid when vote was cast.
-        // However, ensure candidate still exists if candidates could be removed (not current design)
         candidates[candidateId].voteCount--;
         
         voters[msg.sender].hasVoted = false;
-        // Resetting votedForCandidateId to a non-ID or specific "no vote" value might be cleaner.
-        // For simplicity, we can leave it, as hasVoted is the primary check.
-        // voters[msg.sender].votedForCandidateId = type(uint).max; // Example for "no vote"
         emit VoteRevoked(msg.sender, candidateId);
     }
 
-    // --- View Functions ---
     function getVotingStatus() public view returns (VotingPhase phase, uint startTime, uint endTime, uint currentTime) {
         return (currentPhase, votingStartTime, votingEndTime, block.timestamp);
     }
@@ -160,8 +157,4 @@ contract Voting {
         Voter storage voter = voters[_voterAddress];
         return (voter.isRegistered, voter.hasVoted, voter.votedForCandidateId);
     }
-    
-    // getCandidates remains similar, but you might want to return an array of structs
-    // or separate arrays for names and counts as before.
-    // For simplicity, I'm keeping a getter for individual candidate and count.
 }

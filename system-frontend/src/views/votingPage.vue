@@ -40,20 +40,29 @@
                     class="candidates-section">
                     <h3>{{ hasVoted ? '您可以撤销或查看您的选择' : '请选择您支持的候选人：' }}</h3>
 
-                    <!-- 使用 el-row 和 el-col 进行布局 -->
                     <el-row :gutter="20" class="candidates-row">
-                        <el-col v-for="candidate in candidates" :key="candidate.id_on_chain" :xs="24" :sm="12" :md="8"
-                            class="candidate-col">
-                            <el-card shadow="hover" class="candidate-card" :body-style="{ padding: '0px' }"
-                                :class="{ 'is-selected': selectedCandidateIndex === candidate.id_on_chain, 'is-disabled': hasVoted && !allowReselectAfterVote }"
-                                @click="selectCandidate(candidate.id_on_chain)">
-                                <el-image :src="candidate.image_url || defaultCandidateImage" fit="cover"
-                                    class="candidate-image" lazy>
+                        <el-col
+                            v-for="candidate in candidates"
+                            :key="candidate.id_on_chain"
+                            :xs="24" :sm="12" :md="4"
+                            class="candidate-col"
+                        >
+                            <el-card
+                                shadow="hover"
+                                class="candidate-card"
+                                :body-style="{ padding: '0px' }"
+                                :class="{'is-selected': selectedCandidateIndex === candidate.id_on_chain, 'is-disabled': hasVoted && !allowReselectAfterVote }"
+                                @click="selectCandidate(candidate.id_on_chain)"
+                            >
+                                <el-image
+                                    :src="candidate.image_url || defaultCandidateImage"
+                                    fit="contain"
+                                    class="candidate-image"
+                                    lazy
+                                >
                                     <template #error>
                                         <div class="image-slot">
-                                            <el-icon>
-                                                <Picture />
-                                            </el-icon>
+                                            <el-icon><Picture /></el-icon>
                                             <span>图片加载失败</span>
                                         </div>
                                     </template>
@@ -67,18 +76,21 @@
                                         {{ truncateText(candidate.description, 50) || '暂无描述' }}
                                     </p>
                                     <div class="candidate-vote-count">
-                                        当前票数: <el-tag size="small" type="info">{{ candidate.vote_count_from_chain || 0
-                                            }}</el-tag>
+                                        当前票数: <el-tag size="small" type="info">{{ candidate.vote_count_from_chain || 0 }}</el-tag>
                                     </div>
-                                    <el-radio :label="candidate.id_on_chain" size="large" border class="candidate-radio"
-                                        :disabled="hasVoted && !allowReselectAfterVote">
+                                    <el-radio
+                                        :label="candidate.id_on_chain"
+                                        size="large"
+                                        border
+                                        class="candidate-radio"
+                                        :disabled="hasVoted && !allowReselectAfterVote"
+                                    >
                                         {{ selectedCandidateIndex === candidate.id_on_chain ? '已选择' : '选择该候选人' }}
                                     </el-radio>
                                 </div>
                             </el-card>
                         </el-col>
                     </el-row>
-
 
                     <div style="margin-top: 30px; text-align: center;">
                         <el-button v-if="!hasVoted" type="primary" @click="submitVote"
@@ -93,11 +105,9 @@
                     </div>
                 </div>
 
-                <!-- 投票未开始或已结束等状态 -->
                 <el-empty
                     v-if="!loadingData && ((votingStatusInfo && votingStatusInfo.phase !== 'Active') || (votingStatusInfo && votingStatusInfo.phase === 'Active' && candidates.length === 0))"
                     :description="emptyStateDescription" />
-
             </el-card>
         </el-main>
     </el-container>
@@ -374,8 +384,6 @@ onMounted(() => {
 .candidates-row {
     display: flex;
     flex-wrap: wrap;
-    /* 允许换行 */
-    /* justify-content: flex-start;  如果希望不足3个时靠左对齐，可以使用这个 */
 }
 
 .candidate-col {
@@ -389,11 +397,8 @@ onMounted(() => {
     cursor: pointer;
     transition: box-shadow 0.3s, border-color 0.3s;
     width: 100%;
-    /* 卡片宽度占满 el-col */
     display: flex;
-    /* 使卡片成为 flex 容器 */
     flex-direction: column;
-    /* 垂直排列图片和信息 */
 }
 
 .candidate-card:hover:not(.is-disabled) {
@@ -414,8 +419,8 @@ onMounted(() => {
     width: 100%;
     height: 200px;
     display: block;
-    object-fit: cover;
-    /* 确保图片覆盖区域，不变形 */
+    object-fit: contain;
+    background-color: #f8f8f8;
 }
 
 .image-slot {
@@ -438,17 +443,13 @@ onMounted(() => {
 .candidate-info {
     padding: 15px;
     flex-grow: 1;
-    /* 让信息区域占据剩余空间 */
     display: flex;
     flex-direction: column;
-    /* 垂直排列信息项 */
     justify-content: space-between;
-    /* 使radio按钮靠底 */
 }
 
 .candidate-name {
     font-size: 1.2em;
-    /* 稍大一点的姓名 */
     font-weight: bold;
     display: block;
     margin-bottom: 8px;
@@ -460,15 +461,12 @@ onMounted(() => {
     color: #555;
     margin-bottom: 8px;
     min-height: 3em;
-    /* 约等于2行文字的高度 */
     line-height: 1.5;
     overflow: hidden;
     text-overflow: ellipsis;
     display: -webkit-box;
     -webkit-line-clamp: 2;
-    /* 最多显示两行 */
-    line-clamp: 2; 
-    /* 标准属性 */
+    line-clamp: 2;
     -webkit-box-orient: vertical;
 }
 
@@ -477,15 +475,12 @@ onMounted(() => {
     color: #777;
     margin-bottom: 10px;
     min-height: 2.5em;
-    /* 约等于2行文字的高度 */
     line-height: 1.4;
     overflow: hidden;
     text-overflow: ellipsis;
     display: -webkit-box;
-    -webkit-line-clamp: 2; 
-    /* 最多显示两行 */
+    -webkit-line-clamp: 2;
     line-clamp: 2;
-    /* 标准属性 */
     -webkit-box-orient: vertical;
 }
 
@@ -498,6 +493,5 @@ onMounted(() => {
 .candidate-radio {
     width: 100%;
     margin-top: auto;
-    /* 将radio按钮推到底部 */
 }
 </style>

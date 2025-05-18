@@ -11,12 +11,12 @@ BASE_URL = 'http://127.0.0.1:5000'  # 根据你的实际部署环境修改
 
 # ganache配置
 GANACHE_RPC_URL = 'http://127.0.0.1:7545'
-CONTRACT_ADDRESS = '区块链地址'
-CONTRACT_ABI_PATH = '合约地址'
-ADMIN_ACCOUNT_PRIVATE_KEY = '管理员私钥'
+CONTRACT_ADDRESS = 'contract_address'
+CONTRACT_ABI_PATH = '../smart_contract/build/contracts/Voting.json'
+ADMIN_ACCOUNT_PRIVATE_KEY = 'admin_account_private_key'
 
 # sqlalchemy配置
-SQLALCHEMY_DATABASE_URI = 'mysql+pymysql://root:你的密码@localhost:3306/voting'
+SQLALCHEMY_DATABASE_URI = 'mysql+pymysql://root:root_password@localhost:3306/database_name'
 SQLALCHEMY_TRACK_MODIFICATIONS = False
 SQLALCHEMY_ECHO = False
 

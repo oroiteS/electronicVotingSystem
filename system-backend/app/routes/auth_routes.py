@@ -142,12 +142,12 @@ def register_user():
         return jsonify({"success": False, "message": f"An error occurred: {str(e)}"}), 500
 
 
-# 可以添加一个获取当前用户信息的接口 (需要登录)
+# 获取当前用户信息的接口 (需要登录)
 @auth_bp.route('/me', methods=['GET'])
 @jwt_required()
 def get_current_user_profile():
     """获取当前登录用户的信息"""
-    current_user_identity = json.loads(get_jwt_identity())  # 这将返回你在 create_access_token 中设置的 identity_data
+    current_user_identity = json.loads(get_jwt_identity()) 
     user_id_from_token = current_user_identity.get('id')
 
     user = User.query.get(user_id_from_token)

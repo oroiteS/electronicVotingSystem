@@ -137,7 +137,6 @@ const votingStatusInfo = ref(null);
 const showApplyDialog = ref(false);
 const candidatesWithVotes = ref([]); // 新增: 存储候选人及其票数
 
-// --- Computed Properties ---
 const isRegisteredVoter = computed(() => {
   return currentUser.value &&
     currentUser.value.is_voter &&
@@ -157,7 +156,6 @@ const canVote = computed(() => {
 });
 
 
-// --- Methods ---
 const fetchCurrentUser = async () => {
   const loadingInstance = ElLoading.service({ text: '加载用户信息...' });
   try {
@@ -256,12 +254,10 @@ const formatDateTime = (timestampInSeconds) => {
   }
 };
 
-// --- Navigation Methods ---
 const goToVotePage = () => {
   router.push('/vote');
 };
 
-// --- Lifecycle Hooks ---
 onMounted(async () => {
   await fetchCurrentUser();
   await fetchVotingStatus();
@@ -282,7 +278,6 @@ onMounted(async () => {
   margin-bottom: 20px;
 }
 
-/* 为 el-descriptions-item 的标签和内容设置一个最小宽度，防止换行过于频繁 */
 :deep(.el-descriptions__label) {
   min-width: 100px;
   font-weight: bold;

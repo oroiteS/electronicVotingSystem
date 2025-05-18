@@ -154,21 +154,20 @@ const fetchStatusError = ref(false);
 
 const periodFormRef = ref(null);
 const periodForm = ref({
-  startTime: null, // 将存储为Unix秒级时间戳
-  endTime: null,   // 将存储为Unix秒级时间戳
+  startTime: null,
+  endTime: null,
 });
 const periodLoading = ref(false);
 
 const extendFormRef = ref(null);
 const extendForm = ref({
-  newEndTime: null, // 将存储为Unix秒级时间戳
+  newEndTime: null,
 });
 const extendLoading = ref(false);
 
 const startLoading = ref(false);
 const endLoading = ref(false);
 
-// --- Computed properties for enabling/disabling actions ---
 const canSetPeriod = computed(() => contractStatus.value && contractStatus.value.phase === 'Pending');
 
 const canStartVoting = computed(() => {
@@ -186,18 +185,13 @@ const canStartVoting = computed(() => {
 const canExtendDeadline = computed(() => contractStatus.value && contractStatus.value.phase === 'Active');
 const canEndVoting = computed(() => contractStatus.value && contractStatus.value.phase === 'Active');
 
-// --- Validation Rules ---
 const periodRules = {
   startTime: [
     { required: true, message: '请选择开始时间', trigger: 'change' },
     { 
       validator: (rule, value, callback) => {
-        // value-format="X" 返回的是秒级时间戳字符串
         const selectedStartTime = Number(value);
-        // 获取当前时间的秒级时间戳
         const nowInSeconds = Math.floor(Date.now() / 1000);
-        // 允许一些小的误差，比如几秒钟，或者如果用户选择了非常接近现在的时间，但网络传输和区块确认需要时间
-        // 为简单起见，这里直接比较
         if (selectedStartTime < nowInSeconds) {
           callback(new Error('开始时间不能早于当前浏览器时间'));
         } else {

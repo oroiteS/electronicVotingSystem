@@ -19,7 +19,7 @@ scheduler = APScheduler()
 def create_app(init_scheduler=True):
     app = Flask(__name__)
 
-    # Load config (same as before)
+    # Load config
     try:
         app.config.from_object('config')
     except ImportError:
@@ -48,31 +48,19 @@ def create_app(init_scheduler=True):
 
     # --- 配置日志 ---
     log_level = logging.INFO
-    app.logger.setLevel(log_level)  # Set app logger level first
-
-    # 清除由 Flask 或 Werkzeug 可能添加的默认处理器，以避免重复或冲突
-    # 特别是当我们自己添加处理器时
-    # 在 debug 模式下，Werkzeug 会添加一个 StreamHandler 到 werkzeug._internal._logger
-    # Flask 的 app.logger 默认情况下会将日志传播到根记录器，根记录器可能没有处理器或有自己的处理器
-    # 为了简单起见，我们只在我们明确想要文件日志时才添加它
+    app.logger.setLevel(log_level)
 
     is_main_process_or_not_debug = not app.debug or os.environ.get('WERKZEUG_RUN_MAIN') == 'true'
 
-    if not app.debug and is_main_process_or_not_debug:  # 只在非调试模式的主进程中启用文件日志
+    if not app.debug and is_main_process_or_not_debug: 
         log_dir = os.path.join(app.root_path, '..', 'logs')
         if not os.path.exists(log_dir):
             try:
                 os.makedirs(log_dir)
             except OSError as e:
-                print(f"Error creating log directory {log_dir}: {e}")  # 使用 print 因为 logger 可能还未完全设置
+                print(f"Error creating log directory {log_dir}: {e}")
 
         if os.path.exists(log_dir):
-            # 确保旧的同名handler被移除 (如果存在的话)，避免重复添加
-            # (更复杂的场景可能需要命名handler并按名称移除)
-            # for handler in list(app.logger.handlers):
-            # if isinstance(handler, RotatingFileHandler) and handler.baseFilename.endswith('voting_app.log'):
-            # app.logger.removeHandler(handler)
-
             file_handler = RotatingFileHandler(
                 os.path.join(log_dir, 'voting_app.log'),
                 maxBytes=10240,
@@ -82,7 +70,6 @@ def create_app(init_scheduler=True):
             file_handler.setFormatter(logging.Formatter(
                 '%(asctime)s %(levelname)s: %(message)s [in %(pathname)s:%(lineno)d]'
             ))
-            # file_handler.setLevel(log_level) # Handler level defaults to NOTSET, effectively using logger's level
             app.logger.addHandler(file_handler)
             app.logger.info("RotatingFileHandler added for non-debug mode.")
 
@@ -90,13 +77,10 @@ def create_app(init_scheduler=True):
     if is_main_process_or_not_debug:
         app.logger.info('Voting App starting up...')
 
-    # 初始化 Web3 连接 (应该在 app_context 中，因为依赖 app.config)
-    # 并且也应该只在主应用实例创建时进行，或者确保 web3_utils.init_web3 可以安全地被多次调用
-    # 对于 job_start_voting_on_contract 中创建的 app 实例，也需要 Web3
-    # 所以这里的 with app.app_context() 是合理的，确保每次 create_app 都尝试初始化
+    # 初始化 Web3 连接 
     with app.app_context():
         try:
-            web3_utils.init_web3(app)  # init_web3 应该能处理好重复调用的情况 (例如通过全局变量检查)
+            web3_utils.init_web3(app)
             # 日志放里面，确保只在成功后打印
             if is_main_process_or_not_debug:  # 只在主进程的第一次create_app时打印
                 app.logger.info("Web3 initialized successfully.")

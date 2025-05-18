@@ -15,20 +15,11 @@
 
 <script setup>
 import { useAuthStore } from '@/store/auth';
-// import { onMounted } from 'vue';
 
 const authStore = useAuthStore();
-
-// 可选：如果希望在应用加载时自动尝试获取用户信息（如果token存在）
-// onMounted(() => {
-//   if (authStore.isAuthenticated && !authStore.user) {
-//     authStore.fetchCurrentUserProfile();
-//   }
-// });
 </script>
 
 <style>
-/* 全局样式或重置，根据需要添加 */
 body, html {
   margin: 0;
   padding: 0;
@@ -48,7 +39,7 @@ body, html {
   justify-content: space-between;
   align-items: center;
   padding: 0 20px;
-  height: 60px; /* Element Plus header 默认高度 */
+  height: 60px;
   line-height: 60px;
 }
 .logo {
@@ -57,10 +48,9 @@ body, html {
 }
 
 .content-with-header {
-  /* padding-top: 60px;  如果 header 是 fixed 定位，main 才需要 padding-top */
-  flex-grow: 1; /* 让 main 内容区域占据剩余空间 */
+  flex-grow: 1;
 }
 .content-no-header {
-   flex-grow: 1;
+  flex-grow: 1;
 }
 </style>

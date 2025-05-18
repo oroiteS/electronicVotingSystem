@@ -1,5 +1,5 @@
 const Voting = artifacts.require("Voting");
 
 module.exports = function(deployer) {
-  deployer.deploy(Voting); // No constructor arguments
+  deployer.deploy(Voting); 
 };

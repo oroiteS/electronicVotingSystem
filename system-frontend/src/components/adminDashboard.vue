@@ -42,7 +42,6 @@
                     </div>
                 </el-card>
             </el-col>
-            <!-- 可以在这里添加更多的管理员功能卡片 -->
         </el-row>
     </el-card>
 </template>
@@ -78,7 +77,6 @@ const navigateTo = (path) => {
 
 .action-card:hover {
     border-color: #409EFC;
-    /* Element Plus 主题色 */
 }
 
 .action-card-content {

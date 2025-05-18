@@ -9,13 +9,12 @@ from app.models.models import User
 from app.utils.web3_utils import get_ganache_accounts  # 确保 init_web3 在 get_w3 前被调用
 
 # 将 system-backend 目录添加到 Python 路径
-# 假设此脚本在 system-backend 的父目录运行，或者根据你的项目结构调整
 project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
-backend_dir = os.path.join(project_root, 'system-backend')  # 如果脚本在项目根目录，则此路径正确
+backend_dir = os.path.join(project_root, 'system-backend')
 if backend_dir not in sys.path:
     sys.path.insert(0, backend_dir)
 
-load_dotenv(os.path.join(backend_dir, '.env'))  # 加载 .env 文件
+load_dotenv(os.path.join(backend_dir, '.env'))
 
 app = create_app()
 
@@ -34,10 +33,6 @@ def initialize_admin():
             existing_admin = User.query.filter_by(userid=admin_userid, role=admin_role).first()
             if existing_admin:
                 print(f"Admin user '{admin_userid}' already exists.")
-                # 可选：更新密码或以太坊地址
-                # existing_admin.set_password(admin_password)
-                # db.session.commit()
-                # print(f"Admin user '{admin_userid}' password updated (if changed).")
                 return
 
             # 获取 Ganache 的第一个账户作为管理员的以太坊地址

@@ -34,8 +34,6 @@
                             <div style="padding: 10px 20px;">
                                 <p><strong>申请ID:</strong> {{ props.row.id }}</p>
                                 <p><strong>用户ID (数据库):</strong> {{ props.row.user_id }}</p>
-                                <!-- <p><strong>管理员备注:</strong> {{ props.row.admin_notes || '无' }}</p> --> {/* Removed
-                                admin_notes display */}
                                 <p v-if="props.row.reviewed_by_admin_userid"><strong>审核管理员:</strong> {{
                                     props.row.reviewed_by_admin_userid }}</p>
                                 <p v-if="props.row.reviewed_at"><strong>审核时间:</strong> {{
@@ -78,18 +76,11 @@
         <!-- 审核对话框 -->
         <el-dialog v-model="reviewDialogVisible" :title="`审核选民申请 - ${reviewAction === 'approved' ? '批准' : '拒绝'}`"
             width="clamp(300px, 40%, 500px)" @close="resetReviewDialog" :close-on-click-modal="false" append-to-body>
-            <!-- <el-form ref="reviewFormRef" :model="reviewForm" label-width="80px"> -->
             <p style="margin-bottom:15px;">
                 确定要<strong>{{ reviewAction === 'approved' ? '批准' : '拒绝' }}</strong>用户
                 <strong>{{ currentApplication?.user_userid }}</strong>
                 (ETH: {{ currentApplication?.user_ethereum_address || '未提供' }}) 的选民申请吗？
             </p>
-            <!-- 
-          <el-form-item label="审核备注" prop="admin_notes">
-            <el-input type="textarea" :rows="3" v-model="reviewForm.admin_notes" placeholder="请输入管理员备注 (可选)" />
-          </el-form-item> 
-          -->
-            <!-- </el-form> -->
             <template #footer>
                 <span class="dialog-footer">
                     <el-button @click="reviewDialogVisible = false">取消</el-button>
@@ -104,7 +95,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'; // Removed reactive as reviewForm is no longer complex
+import { ref, onMounted } from 'vue';
 import api from '@/services/api';
 import { ElMessage } from 'element-plus';
 import { Refresh } from '@element-plus/icons-vue';
@@ -119,13 +110,8 @@ const totalApplications = ref(0);
 
 const reviewDialogVisible = ref(false);
 const reviewSubmitting = ref(false);
-// const reviewFormRef = ref(null); // No longer needed
 const currentApplication = ref(null);
 const reviewAction = ref('');
-
-// const reviewForm = reactive({ // No longer needed
-//   admin_notes: '',
-// });
 
 const fetchApplications = async () => {
     loading.value = true;
@@ -181,17 +167,12 @@ const formatDateTime = (dateTimeString) => {
 const openReviewDialog = (application, action) => {
     currentApplication.value = application;
     reviewAction.value = action;
-    // reviewForm.admin_notes = ''; // No longer needed
     reviewDialogVisible.value = true;
 };
 
 const resetReviewDialog = () => {
     reviewDialogVisible.value = false;
     currentApplication.value = null;
-    // reviewForm.admin_notes = ''; // No longer needed
-    // if (reviewFormRef.value) { // No longer needed
-    //   reviewFormRef.value.resetFields();
-    // }
 };
 
 const submitReview = async () => {
@@ -199,12 +180,7 @@ const submitReview = async () => {
     try {
         const payload = {
             status: reviewAction.value,
-            // admin_notes: reviewForm.admin_notes, // Removed admin_notes from payload
         };
-        // 如果后端 API 严格要求 admin_notes 字段，即使为空，你可能需要发送 admin_notes: ''
-        // 但根据你提供的 models.py，后端在 review_voter_application 中只是 data.get('admin_notes', '')
-        // 这意味着如果前端不发送 admin_notes，它会默认为空字符串，这应该是可以的。
-        // 如果后端接口严格要求该字段，则应发送： admin_notes: ''
 
         const response = await api.reviewVoterApplication(currentApplication.value.id, payload);
         if (response.data.success) {

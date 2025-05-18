@@ -137,11 +137,11 @@ const goToRegister = () => {
 
 .login-panel {
   border-radius: 12px;
-  overflow: hidden; /* 确保内部元素不会溢出圆角 */
+  overflow: hidden;
 }
 
 .panel-left {
-  background-color: #5a8dee; /* 左侧背景色，可以调整或使用图片 */
+  background-color: #5a8dee;
   padding: 40px;
   display: flex;
   flex-direction: column;
@@ -156,7 +156,7 @@ const goToRegister = () => {
   text-align: center;
 }
 
-.decorative-graphics { /* 简单的CSS图形替代插画 */
+.decorative-graphics {
   width: 180px;
   height: 180px;
   background-color: rgba(255, 255, 255, 0.1);
@@ -230,28 +230,25 @@ const goToRegister = () => {
   font-size: 15px; /* 略微增大副标题字体 */
 }
 
-/* --- 字体增大关键修改 --- */
 .login-form-container .el-form-item__label {
-  font-size: 15px; /* 增大标签字体 */
-  color: #606266; /* 可以调整标签颜色使其更清晰 */
-  margin-bottom: 2px !important; /* 调整标签和输入框间距 */
+  font-size: 15px;
+  color: #606266;
+  margin-bottom: 2px !important;
 }
 
 .login-form-container .el-input--large .el-input__inner {
-  font-size: 16px; /* 增大输入框内文字体 */
-  /* Element Plus的 large size 输入框本身较高，如果需要调整高度可以修改 padding */
+  font-size: 16px;
 }
 .login-form-container .el-input--large .el-input__prefix .el-input__icon,
 .login-form-container .el-input--large .el-input__suffix .el-input__icon {
-    font-size: 16px; /* 确保图标大小与文字协调 */
+  font-size: 16px;
 }
 
 
 .login-form-container .el-button--large {
-  font-size: 16px; /* 增大按钮文字体 */
+  font-size: 16px;
   font-weight: 500;
 }
-/* --- 字体增大关键修改结束 --- */
 
 
 .login-button {
@@ -273,21 +270,20 @@ const goToRegister = () => {
   font-size: 14px;
 }
 
-/* 响应式：在小屏幕上隐藏左侧插画 */
-@media (max-width: 768px) { /* Element Plus的sm断点通常是768px */
+@media (max-width: 768px) {
   .panel-left {
     display: none;
   }
   .panel-right {
-    border-radius: 12px; /* 小屏幕时右侧面板也应用圆角 */
+    border-radius: 12px;
     padding: 30px 20px;
   }
-  .login-panel .el-row > .el-col { /* 移除小屏幕下col的padding（如果有）*/
+  .login-panel .el-row > .el-col {
     padding-left: 0 !important;
     padding-right: 0 !important;
   }
   .form-title {
-    font-size: 22px; /* 小屏幕上标题可以小一点 */
+    font-size: 22px;
   }
   .login-form-container .el-form-item__label {
     font-size: 14px;
